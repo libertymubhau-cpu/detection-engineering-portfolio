@@ -1,0 +1,40 @@
+title: Suspicious Encoded PowerShell Execution
+id: 8f2a3e1c-4b7d-4e9a-9c1f-6d5e8a2b7f3c
+status: experimental
+description: >
+  Detects PowerShell execution using Base64-encoded commands combined with
+  hidden-window or no-profile flags, commonly used to evade static string
+  detection in dropper and living-off-the-land attack chains.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+author: Liberty Mubhau
+date: 2026-06-01
+tags:
+  - attack.execution
+  - attack.t1059.001
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_process:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+  selection_flags:
+    CommandLine|contains:
+      - '-enc'
+      - '-EncodedCommand'
+      - '-nop'
+      - '-noni'
+      - '-w hidden'
+      - '-windowstyle hidden'
+  filter_known_rmm:
+    # Populate with hashes/publishers of approved RMM tools during deployment.
+    # Left as a placeholder so this rule fails safe (does not silently over-suppress) until tuned.
+    ParentImage|endswith:
+      - '\REPLACE_WITH_APPROVED_RMM_PARENT.exe'
+  condition: selection_process and selection_flags and not filter_known_rmm
+falsepositives:
+  - RMM and patch management tooling using legitimate encoded PowerShell (must be allowlisted per environment)
+  - Scheduled administrative maintenance scripts run under documented service accounts
+level: high

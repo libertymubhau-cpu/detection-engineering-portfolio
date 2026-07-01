@@ -1,0 +1,40 @@
+title: Suspicious Mailbox Forwarding Rule Creation (BEC Indicator)
+id: 3d7c9f1a-2e5b-4a8d-b1c6-9f4e7a2d5c8b
+status: experimental
+description: >
+  Detects creation or modification of Exchange Online inbox rules that forward
+  mail externally, auto-delete messages, or reference financially sensitive
+  keywords — common precursors to Business Email Compromise fraud.
+references:
+  - https://attack.mitre.org/techniques/T1114/003/
+author: Liberty Mubhau
+date: 2026-06-01
+tags:
+  - attack.collection
+  - attack.t1114.003
+logsource:
+  product: m365
+  service: exchange
+detection:
+  selection_operation:
+    Operation:
+      - 'New-InboxRule'
+      - 'Set-InboxRule'
+  selection_indicators:
+    Parameters|contains:
+      - 'ForwardTo'
+      - 'ForwardAsAttachmentTo'
+      - 'RedirectTo'
+      - 'DeleteMessage'
+  selection_keywords:
+    Parameters|contains:
+      - 'invoice'
+      - 'payment'
+      - 'wire'
+      - 'bank'
+      - 'password'
+  condition: selection_operation and (selection_indicators or selection_keywords)
+falsepositives:
+  - Legitimate assistant/delegate forwarding configurations (maintain an approved-pairs watchlist)
+  - Out-of-office forwarding to a personal or secondary mailbox
+level: high
